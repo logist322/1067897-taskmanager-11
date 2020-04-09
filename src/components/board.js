@@ -1,4 +1,4 @@
-export const createBoardTemplate = () => {
+export default () => {
   return (
     `<section class="board container">
       <div class="board__filter-list">

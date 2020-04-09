@@ -1,4 +1,4 @@
-export const createSiteFilterTemplate = () => {
+export default () => {
   return (
     `<section class="main__filter filter container">
       <input

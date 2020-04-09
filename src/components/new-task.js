@@ -1,4 +1,4 @@
-export const createNewTaskTemplate = () => {
+export default () => {
   return (
     `<article class="card card--edit card--black">
       <form class="card__form" method="get">

@@ -1,4 +1,4 @@
-export const createLoadMoreButtonTemplate = () => {
+export default () => {
   return (
     `<button class="load-more" type="button">load more</button>`
   );
