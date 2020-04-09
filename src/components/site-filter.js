@@ -1,4 +1,4 @@
-export default () => {
+const createSiteFilterTemplate = () => {
   return (
     `<section class="main__filter filter container">
       <input
@@ -61,3 +61,5 @@ export default () => {
     </section>`
   );
 };
+
+export default createSiteFilterTemplate;

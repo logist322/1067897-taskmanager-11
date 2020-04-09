@@ -1,4 +1,4 @@
-export default () => {
+const createNewTaskTemplate = () => {
   return (
     `<article class="card card--edit card--black">
       <form class="card__form" method="get">
@@ -198,3 +198,5 @@ export default () => {
     </article>`
   );
 };
+
+export default createNewTaskTemplate;

@@ -1,4 +1,4 @@
-export default () => {
+const createBoardTemplate = () => {
   return (
     `<section class="board container">
       <div class="board__filter-list">
@@ -12,3 +12,5 @@ export default () => {
     </section>`
   );
 };
+
+export default createBoardTemplate;
