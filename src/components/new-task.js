@@ -1,55 +1,17 @@
 import {formatTime} from '../utils.js';
 import {DAYS, MONTH_NAMES, COLORS} from '../const.js';
-
-const createColorsMarkup = (colors, currentColor) => {
-  return colors.map((color, index) => {
-    return (
-      `<input
-        type="radio"
-        id="color-${color}-${index}"
-        class="card__color-input card__color-input--${color} visually-hidden"
-        name="color"
-        value="${color}"
-        ${color === currentColor ? `checked` : ``}
-      />
-      <label
-        for="color-${color}-${index}"
-        class="card__color card__color--${color}"
-        >${color}</label
-      >`
-    );
-  }).join(`\n`);
-};
-
-const createRepeatingDaysMarkup = (days, repeatingDays) => {
-  return days.map((day, index) => {
-    const isChecked = repeatingDays[day];
-
-    return (
-      `<input
-        class="visually-hidden card__repeat-day-input"
-        type="checkbox"
-        id="repeat-${day}-${index}"
-        name="repeat"
-        value="${day}"
-        ${isChecked ? `checked` : ``}
-      />
-      <label class="card__repeat-day" for="repeat-${day}-${index}"
-        >${day}</label
-      >`
-    );
-  }).join(`\n`);
-};
+import createColorsMarkup from './color-markup.js';
+import createRepeatingDaysMarkup from './repeating-days-markup.js';
 
 const createNewTaskTemplate = (task) => {
   const {description, dueDate, color, repeatingDays} = task;
 
   const isExpired = dueDate instanceof Date && dueDate < Date.now();
-  const isDataShowind = !!dueDate;
+  const isDataShowing = dueDate !== null;
   const isRepeatingTask = Object.values(repeatingDays).some(Boolean);
 
-  const date = isDataShowind ? `${dueDate.getDate()} ${MONTH_NAMES[dueDate.getMonth()]}` : ``;
-  const time = isDataShowind ? `${formatTime(dueDate)}` : ``;
+  const date = isDataShowing ? `${dueDate.getDate()} ${MONTH_NAMES[dueDate.getMonth()]}` : ``;
+  const time = isDataShowing ? `${formatTime(dueDate)}` : ``;
 
   const repeatClass = isRepeatingTask ? `card--repeat` : ``;
   const deadlineClass = isExpired ? `card--deadline` : ``;
@@ -81,11 +43,11 @@ const createNewTaskTemplate = (task) => {
             <div class="card__details">
               <div class="card__dates">
                 <button class="card__date-deadline-toggle" type="button">
-                  date: <span class="card__date-status">${isDataShowind ? `yes` : `no`}</span>
+                  date: <span class="card__date-status">${isDataShowing ? `yes` : `no`}</span>
                 </button>
 
                 ${
-    isDataShowind ?
+    isDataShowing ?
       `<fieldset class="card__date-deadline">
         <label class="card__input-deadline-wrap">
           <input

@@ -1,5 +1,5 @@
-import {DESCRIPTIONS, COLORS} from '../const.js';
-import {getRandomElementFromArray, getRandomIntegerNumber} from '../utils.js';
+import {DESCRIPTIONS, COLORS, DAYS} from '../const.js';
+import {getRandomElementFromArray, getRandomDate} from '../utils.js';
 
 const DefaultRepeatingDays = {
   'mo': false,
@@ -11,23 +11,19 @@ const DefaultRepeatingDays = {
   'su': false,
 };
 
-const getRandomDate = () => {
-  const targetDate = new Date();
-  const sing = Math.random() > 0.5 ? 1 : -1;
-  const diffValue = sing * getRandomIntegerNumber(0, 7);
-
-  targetDate.setDate(targetDate.getDate() + diffValue);
-
-  return targetDate;
+const RandomRepeatingDays = function () {
+  DAYS.forEach((day) => {
+    this[day] = Math.random() > 0.5;
+  });
 };
 
 const generateTask = () => {
-  const dueDate = Math.random() > 1 ? null : getRandomDate();
+  const dueDate = Math.random() > 0.5 ? null : getRandomDate();
 
   return {
     description: getRandomElementFromArray(DESCRIPTIONS),
     dueDate,
-    repeatingDays: Object.assign({}, DefaultRepeatingDays, {'mo': Math.random() > 0.5}),
+    repeatingDays: Math.random() > 0.5 ? DefaultRepeatingDays : new RandomRepeatingDays(),
     color: getRandomElementFromArray(COLORS),
     isArchive: Math.random() > 0.5,
     isFavorite: Math.random() > 0.5
