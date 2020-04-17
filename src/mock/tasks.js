@@ -1,21 +1,8 @@
 import {DESCRIPTIONS, COLORS, DAYS} from '../const.js';
 import {getRandomElementFromArray, getRandomDate} from '../utils.js';
 
-const getRepeatingDays = (method = `random`) => {
-  let setDay;
-
-  switch (method) {
-    case `random`:
-      setDay = () => Math.random() > 0.5;
-      break;
-
-    case `default`:
-      setDay = () => false;
-      break;
-
-    default:
-      throw new Error(`Only 'random' or 'default'`);
-  }
+const getRepeatingDays = (isRandom) => {
+  const setDay = isRandom ? () => Math.random() > 0.5 : () => false;
 
   return DAYS.reduce((obj, day) => {
     obj[day] = setDay();
@@ -29,7 +16,7 @@ const generateTask = () => {
   return {
     description: getRandomElementFromArray(DESCRIPTIONS),
     dueDate,
-    repeatingDays: Math.random() > 0.5 ? getRepeatingDays(`default`) : getRepeatingDays(),
+    repeatingDays: Math.random() > 0.5 ? getRepeatingDays() : getRepeatingDays(true),
     color: getRandomElementFromArray(COLORS),
     isArchive: Math.random() > 0.5,
     isFavorite: Math.random() > 0.5
