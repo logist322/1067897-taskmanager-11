@@ -28,3 +28,21 @@ export const getRandomDate = () => {
 
   return targetDate;
 };
+
+export const createElement = (template) => {
+  const newElement = document.createElement(`div`);
+  newElement.innerHTML = template;
+
+  return newElement.firstChild;
+};
+
+export const render = (container, element, isAfterBegin = false) => {
+  switch (isAfterBegin) {
+    case true:
+      container.prepend(element);
+      break;
+
+    default:
+      container.append(element);
+  }
+};
