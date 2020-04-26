@@ -37,12 +37,9 @@ export const createElement = (template) => {
 };
 
 export const render = (container, element, isAfterBegin = false) => {
-  switch (isAfterBegin) {
-    case true:
-      container.prepend(element);
-      break;
-
-    default:
-      container.append(element);
+  if (isAfterBegin) {
+    container.prepend(element);
+  } else {
+    container.append(element);
   }
 };

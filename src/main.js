@@ -38,9 +38,12 @@ const renderTask = (taskListElement, task) => {
 
 const renderBoard = (boardComponent, tasks) => {
   render(boardComponent.getElement(), new SortComponent().getElement());
-  render(boardComponent.getElement(), new TasksComponent().getElement());
 
-  const taskListElement = boardComponent.getElement().querySelector(`.board__tasks`);
+  const tasksComponent = new TasksComponent();
+
+  render(boardComponent.getElement(), tasksComponent.getElement());
+
+  const taskListElement = tasksComponent.getElement();
 
   let showingTasksCount = SHOWING_TASKS_COUNT_ON_START;
 
@@ -72,41 +75,6 @@ const siteHeaderElement = siteMainElement.querySelector(`.main__control`);
 
 const filters = generateFilters();
 const tasks = generateTasks(TASK_COUNT);
-
-// render(siteHeaderElement, createSiteMenuTemplate());
-
-// render(siteMainElement, createSiteFilterTemplate(filters));
-// render(siteMainElement, createBoardTemplate());
-
-// const siteBoardElement = siteMainElement.querySelector(`.board`);
-// const siteTasksElement = siteBoardElement.querySelector(`.board__tasks`);
-
-
-// render(siteTasksElement, createNewTaskTemplate(tasks[0]));
-
-// let showingTasksCount = SHOWING_TASKS_COUNT_ON_START;
-
-// tasks.slice(1, showingTasksCount).forEach((task) => {
-//   render(siteTasksElement, createTaskTemplate(task));
-// });
-
-// render(siteBoardElement, createLoadMoreButtonTemplate());
-
-// const loadMoreButoonElement = siteBoardElement.querySelector(`.load-more`);
-
-// loadMoreButoonElement.addEventListener(`click`, () => {
-//   const prevTasksCount = showingTasksCount;
-
-//   showingTasksCount += SHOWING_TASKS_COUNT_BY_BUTTON;
-
-//   tasks.slice(prevTasksCount, showingTasksCount).forEach((task) => {
-//     render(siteTasksElement, createTaskTemplate(task));
-//   });
-
-//   if (showingTasksCount >= tasks.length) {
-//     loadMoreButoonElement.remove();
-//   }
-// });
 
 render(siteHeaderElement, new MenuComponent().getElement());
 render(siteMainElement, new FilterComponent(filters).getElement());
