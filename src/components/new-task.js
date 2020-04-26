@@ -1,4 +1,4 @@
-import {formatTime} from '../utils.js';
+import {formatTime, createElement} from '../utils.js';
 import {DAYS, MONTH_NAMES, COLORS} from '../const.js';
 import createColorsMarkup from './color-markup.js';
 import createRepeatingDaysMarkup from './repeating-days-markup.js';
@@ -97,4 +97,26 @@ const createNewTaskTemplate = (task) => {
   );
 };
 
-export default createNewTaskTemplate;
+export default class NewTask {
+  constructor(task) {
+    this._task = task;
+
+    this._element = null;
+  }
+
+  getTemplate() {
+    return createNewTaskTemplate(this._task);
+  }
+
+  getElement() {
+    if (!this._element) {
+      this._element = createElement(this.getTemplate());
+    }
+
+    return this._element;
+  }
+
+  removeElement() {
+    this._element = null;
+  }
+}
