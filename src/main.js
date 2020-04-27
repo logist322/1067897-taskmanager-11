@@ -6,6 +6,7 @@ import TaskComponent from './components/task.js';
 import TasksComponent from './components/tasks.js';
 import LoadMoreButtonComponent from './components/load-more-button.js';
 import SortComponent from './components/sort.js';
+import NoTasksComponent from './components/no-tasks.js';
 import {generateFilters} from './mock/filter.js';
 import {generateTasks} from './mock/tasks.js';
 import {render} from './utils.js';
@@ -18,11 +19,18 @@ const renderTask = (taskListElement, task) => {
   const editButtonHandler = (evt) => {
     evt.preventDefault();
     taskListElement.replaceChild(newTaskComponent.getElement(), taskComponent.getElement());
+    document.addEventListener(`keydown`, escapeButtonHandler);
   };
 
   const submitButtonHandler = (evt) => {
     evt.preventDefault();
     taskListElement.replaceChild(taskComponent.getElement(), newTaskComponent.getElement());
+  };
+
+  const escapeButtonHandler = (evt) => {
+    evt.preventDefault();
+    taskListElement.replaceChild(taskComponent.getElement(), newTaskComponent.getElement());
+    document.removeEventListener(`keydown`, escapeButtonHandler);
   };
 
   const taskComponent = new TaskComponent(task);
@@ -37,6 +45,14 @@ const renderTask = (taskListElement, task) => {
 };
 
 const renderBoard = (boardComponent, tasks) => {
+  const isAllTasksArchived = !tasks.some((task) => !task.isArchive);
+
+  if (isAllTasksArchived) {
+    render(boardComponent.getElement(), new NoTasksComponent().getElement());
+
+    return;
+  }
+
   render(boardComponent.getElement(), new SortComponent().getElement());
 
   const tasksComponent = new TasksComponent();
