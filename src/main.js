@@ -45,7 +45,7 @@ const renderTask = (taskListElement, task) => {
 };
 
 const renderBoard = (boardComponent, tasks) => {
-  const isAllTasksArchived = tasks.every((task) => task.isArchive);
+  const isAllTasksArchived = !tasks.some((task) => !task.isArchive);
 
   if (isAllTasksArchived) {
     render(boardComponent.getElement(), new NoTasksComponent().getElement());
