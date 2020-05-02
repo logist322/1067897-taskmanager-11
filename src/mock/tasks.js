@@ -1,5 +1,5 @@
 import {DESCRIPTIONS, COLORS, DAYS} from '../const.js';
-import {getRandomElementFromArray, getRandomDate} from '../utils.js';
+import {getRandomElementFromArray, getRandomDate} from '../utils/common.js';
 
 const getRepeatingDays = (isRandom) => {
   const setDay = isRandom ? () => Math.random() > 0.5 : () => false;
