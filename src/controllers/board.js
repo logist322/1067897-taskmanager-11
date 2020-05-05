@@ -113,10 +113,10 @@ export default class BoardController {
       return;
     }
 
-    this._tasks = [].concat(this._tasks.slice(0, index), newData, this._tasks.slice(index + 1));
+    this._tasks = [...this._tasks.slice(0, index), newData, ...this._tasks.slice(index + 1)];
 
     const shownIndex = this._tasksToShow.findIndex((it) => oldData === it);
-    this._tasksToShow = [].concat(this._tasksToShow.slice(0, shownIndex), newData, this._tasksToShow.slice(shownIndex + 1));
+    this._tasksToShow = [...this._tasksToShow.slice(0, shownIndex), newData, ...this._tasksToShow.slice(shownIndex + 1)];
 
     this._showedTaskControllers[shownIndex].render(this._tasks[index]);
   }
