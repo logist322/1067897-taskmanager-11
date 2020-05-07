@@ -128,6 +128,41 @@ class AbstractComponent {
 
 /***/ }),
 
+/***/ "./src/components/abstract-smart-component.js":
+/*!****************************************************!*\
+  !*** ./src/components/abstract-smart-component.js ***!
+  \****************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return AbstractSmartComponent; });
+/* harmony import */ var _abstract_component_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./abstract-component.js */ "./src/components/abstract-component.js");
+
+
+class AbstractSmartComponent extends _abstract_component_js__WEBPACK_IMPORTED_MODULE_0__["default"] {
+  recoveryListeners() {
+    throw new Error(`Abstract method not implemented: recoveryListeners`);
+  }
+
+  rerender() {
+    const oldElement = this.getElement();
+    const parent = oldElement.parentElement;
+
+    this.removeElement();
+
+    const newElement = this.getElement();
+
+    parent.replaceChild(newElement, oldElement);
+
+    this.recoveryListeners();
+  }
+}
+
+
+/***/ }),
+
 /***/ "./src/components/board.js":
 /*!*********************************!*\
   !*** ./src/components/board.js ***!
@@ -237,29 +272,32 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _const_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../const.js */ "./src/const.js");
 /* harmony import */ var _color_markup_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./color-markup.js */ "./src/components/color-markup.js");
 /* harmony import */ var _repeating_days_markup_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./repeating-days-markup.js */ "./src/components/repeating-days-markup.js");
-/* harmony import */ var _abstract_component_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./abstract-component.js */ "./src/components/abstract-component.js");
+/* harmony import */ var _abstract_smart_component_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./abstract-smart-component.js */ "./src/components/abstract-smart-component.js");
 
 
 
 
 
 
+const isRepeating = (repeatingDays) => {
+  return Object.values(repeatingDays).some(Boolean);
+};
 
-const createNewTaskTemplate = (task) => {
-  const {description, dueDate, color, repeatingDays} = task;
+const createNewTaskTemplate = (task, options = {}) => {
+  const {description, dueDate, color} = task;
+  const {isDateShowing, isRepeatingTask, activeRepeatingDays} = options;
 
   const isExpired = dueDate instanceof Date && dueDate < Date.now();
-  const isDataShowing = dueDate !== null;
-  const isRepeatingTask = Object.values(repeatingDays).some(Boolean);
+  const isBlockSaveButton = (isDateShowing && isRepeatingTask) || (isRepeatingTask && !isRepeating(activeRepeatingDays));
 
-  const date = isDataShowing ? `${dueDate.getDate()} ${_const_js__WEBPACK_IMPORTED_MODULE_1__["MONTH_NAMES"][dueDate.getMonth()]}` : ``;
-  const time = isDataShowing ? `${Object(_utils_common_js__WEBPACK_IMPORTED_MODULE_0__["formatTime"])(dueDate)}` : ``;
+  const date = (isDateShowing && dueDate) ? `${dueDate.getDate()} ${_const_js__WEBPACK_IMPORTED_MODULE_1__["MONTH_NAMES"][dueDate.getMonth()]}` : ``;
+  const time = (isDateShowing && dueDate) ? `${Object(_utils_common_js__WEBPACK_IMPORTED_MODULE_0__["formatTime"])(dueDate)}` : ``;
 
   const repeatClass = isRepeatingTask ? `card--repeat` : ``;
   const deadlineClass = isExpired ? `card--deadline` : ``;
 
   const colorsMarkup = Object(_color_markup_js__WEBPACK_IMPORTED_MODULE_2__["default"])(_const_js__WEBPACK_IMPORTED_MODULE_1__["COLORS"], color);
-  const repeatingDaysMarkup = Object(_repeating_days_markup_js__WEBPACK_IMPORTED_MODULE_3__["default"])(_const_js__WEBPACK_IMPORTED_MODULE_1__["DAYS"], repeatingDays);
+  const repeatingDaysMarkup = Object(_repeating_days_markup_js__WEBPACK_IMPORTED_MODULE_3__["default"])(_const_js__WEBPACK_IMPORTED_MODULE_1__["DAYS"], activeRepeatingDays);
 
   return (
     `<article class="card card--edit card--${color} ${repeatClass} ${deadlineClass}">
@@ -285,11 +323,11 @@ const createNewTaskTemplate = (task) => {
             <div class="card__details">
               <div class="card__dates">
                 <button class="card__date-deadline-toggle" type="button">
-                  date: <span class="card__date-status">${isDataShowing ? `yes` : `no`}</span>
+                  date: <span class="card__date-status">${isDateShowing ? `yes` : `no`}</span>
                 </button>
 
                 ${
-    isDataShowing ?
+    isDateShowing ?
       `<fieldset class="card__date-deadline">
         <label class="card__input-deadline-wrap">
           <input
@@ -330,7 +368,7 @@ const createNewTaskTemplate = (task) => {
           </div>
 
           <div class="card__status-btns">
-            <button class="card__save" type="submit">save</button>
+            <button class="card__save" type="submit" ${isBlockSaveButton ? `disabled` : ``}>save</button>
             <button class="card__delete" type="button">delete</button>
           </div>
         </div>
@@ -339,19 +377,72 @@ const createNewTaskTemplate = (task) => {
   );
 };
 
-class NewTask extends _abstract_component_js__WEBPACK_IMPORTED_MODULE_4__["default"] {
+class NewTask extends _abstract_smart_component_js__WEBPACK_IMPORTED_MODULE_4__["default"] {
   constructor(task) {
     super();
 
     this._task = task;
+    this._isDateShowing = !!task.dueDate;
+    this._isRepeatingTask = Object.values(task.repeatingDays).some(Boolean);
+    this._activeRepeatingDays = Object.assign({}, task.repeatingDays);
+    this._submitHandler = null;
+
+    this._subscribeOnEvents();
   }
 
   getTemplate() {
-    return createNewTaskTemplate(this._task);
+    return createNewTaskTemplate(this._task, {
+      isDateShowing: this._isDateShowing,
+      isRepeatingTask: this._isRepeatingTask,
+      activeRepeatingDays: this._activeRepeatingDays,
+    });
   }
 
   setSubmitHandler(handler) {
     this.getElement().querySelector(`form`).addEventListener(`submit`, handler);
+
+    this._submitHandler = handler;
+  }
+
+  reset() {
+    const task = this._task;
+
+    this._isDateShowing = !!task.dueDate;
+    this._isRepeatingTask = Object.values(task.repeatingDays).some(Boolean);
+    this._activeRepeatingDays = Object.assign({}, task.repeatingDays);
+
+    this.rerender();
+  }
+
+  recoveryListeners() {
+    this.setSubmitHandler(this._submitHandler);
+    this._subscribeOnEvents();
+  }
+
+  _subscribeOnEvents() {
+    const element = this.getElement();
+
+    element.querySelector(`.card__date-deadline-toggle`).addEventListener(`click`, () => {
+      this._isDateShowing = !this._isDateShowing;
+
+      this.rerender();
+    });
+
+    element.querySelector(`.card__repeat-toggle`).addEventListener(`click`, () => {
+      this._isRepeatingTask = !this._isRepeatingTask;
+
+      this.rerender();
+    });
+
+    const repeatDays = element.querySelector(`.card__repeat-days`);
+
+    if (repeatDays) {
+      repeatDays.addEventListener(`change`, (evt) => {
+        this._activeRepeatingDays[evt.target.value] = evt.target.checked;
+
+        this.rerender();
+      });
+    }
   }
 }
 
@@ -581,7 +672,7 @@ class Sort extends _abstract_component_js__WEBPACK_IMPORTED_MODULE_0__["default"
     this.getElement().addEventListener(`click`, (evt) => {
       evt.preventDefault();
 
-      if (evt.target.tagName !== `a`) {
+      if (evt.target.tagName !== `A`) {
         return;
       }
 
@@ -693,6 +784,14 @@ class Task extends _abstract_component_js__WEBPACK_IMPORTED_MODULE_2__["default"
   setEditClickHandler(handler) {
     this.getElement().querySelector(`.card__btn--edit`).addEventListener(`click`, handler);
   }
+
+  setFavoriteButtonClickHandler(handler) {
+    this.getElement().querySelector(`.card__btn--favorites`).addEventListener(`click`, handler);
+  }
+
+  setArchiveButtonClickHandler(handler) {
+    this.getElement().querySelector(`.card__btn--archive`).addEventListener(`click`, handler);
+  }
 }
 
 
@@ -782,13 +881,11 @@ const DESCRIPTIONS = [
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return BoardController; });
 /* harmony import */ var _components_sort_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../components/sort.js */ "./src/components/sort.js");
-/* harmony import */ var _components_new_task_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../components/new-task.js */ "./src/components/new-task.js");
-/* harmony import */ var _components_task_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../components/task.js */ "./src/components/task.js");
-/* harmony import */ var _components_tasks_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../components/tasks.js */ "./src/components/tasks.js");
-/* harmony import */ var _components_load_more_button_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../components/load-more-button.js */ "./src/components/load-more-button.js");
-/* harmony import */ var _components_no_tasks_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../components/no-tasks.js */ "./src/components/no-tasks.js");
-/* harmony import */ var _utils_render_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../utils/render.js */ "./src/utils/render.js");
-
+/* harmony import */ var _components_tasks_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../components/tasks.js */ "./src/components/tasks.js");
+/* harmony import */ var _components_load_more_button_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../components/load-more-button.js */ "./src/components/load-more-button.js");
+/* harmony import */ var _components_no_tasks_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../components/no-tasks.js */ "./src/components/no-tasks.js");
+/* harmony import */ var _utils_render_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../utils/render.js */ "./src/utils/render.js");
+/* harmony import */ var _task_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./task.js */ "./src/controllers/task.js");
 
 
 
@@ -799,34 +896,20 @@ __webpack_require__.r(__webpack_exports__);
 const SHOWING_TASKS_COUNT_ON_START = 8;
 const SHOWING_TASKS_COUNT_BY_BUTTON = 8;
 
-const renderTask = (taskListElement, task) => {
-  const escapeButtonHandler = (evt) => {
-    if (evt.key === `Escape` || evt.key === `Esc`) {
-      Object(_utils_render_js__WEBPACK_IMPORTED_MODULE_6__["replace"])(taskComponent, newTaskComponent);
-      document.removeEventListener(`keydown`, escapeButtonHandler);
-    }
-  };
+const renderTasks = (taskListElement, tasks, dataChangeHandler, viewChangeHandler) => {
+  return tasks.map((task) => {
+    const taskController = new _task_js__WEBPACK_IMPORTED_MODULE_5__["default"](taskListElement, dataChangeHandler, viewChangeHandler);
 
-  const taskComponent = new _components_task_js__WEBPACK_IMPORTED_MODULE_2__["default"](task);
-  taskComponent.setEditClickHandler((evt) => {
-    evt.preventDefault();
-    Object(_utils_render_js__WEBPACK_IMPORTED_MODULE_6__["replace"])(newTaskComponent, taskComponent);
-    document.addEventListener(`keydown`, escapeButtonHandler);
+    taskController.render(task);
+
+    return taskController;
   });
-
-  const newTaskComponent = new _components_new_task_js__WEBPACK_IMPORTED_MODULE_1__["default"](task);
-  newTaskComponent.setSubmitHandler((evt) => {
-    evt.preventDefault();
-    Object(_utils_render_js__WEBPACK_IMPORTED_MODULE_6__["replace"])(taskComponent, newTaskComponent);
-  });
-
-  Object(_utils_render_js__WEBPACK_IMPORTED_MODULE_6__["render"])(taskListElement, taskComponent);
 };
 
 const getSortedTasks = (tasks, sortType) => {
   let sortedTasks = [];
 
-  const showingTasks = tasks;
+  const showingTasks = tasks.slice();
 
   switch (sortType) {
     case _components_sort_js__WEBPACK_IMPORTED_MODULE_0__["SortType"].DATE_DOWN:
@@ -849,71 +932,217 @@ class BoardController {
   constructor(container) {
     this._container = container;
 
-    this._noTasksComponent = new _components_no_tasks_js__WEBPACK_IMPORTED_MODULE_5__["default"]();
+    this._tasks = [];
+    this._tasksToShow = [];
+    this._showedTaskControllers = [];
+    this._showingTasksCount = SHOWING_TASKS_COUNT_ON_START;
+
+    this._noTasksComponent = new _components_no_tasks_js__WEBPACK_IMPORTED_MODULE_3__["default"]();
     this._sortComponent = new _components_sort_js__WEBPACK_IMPORTED_MODULE_0__["default"]();
-    this._tasksComponent = new _components_tasks_js__WEBPACK_IMPORTED_MODULE_3__["default"]();
-    this._loadMoreButtonComponent = new _components_load_more_button_js__WEBPACK_IMPORTED_MODULE_4__["default"]();
+    this._tasksComponent = new _components_tasks_js__WEBPACK_IMPORTED_MODULE_1__["default"]();
+    this._loadMoreButtonComponent = new _components_load_more_button_js__WEBPACK_IMPORTED_MODULE_2__["default"]();
+
+    this._sortTypeChangeHandler = this._sortTypeChangeHandler.bind(this);
+    this._dataChangeHandler = this._dataChangeHandler.bind(this);
+    this._viewChangeHandler = this._viewChangeHandler.bind(this);
+
+    this._sortComponent.setSortTypeChangeHandler(this._sortTypeChangeHandler);
   }
 
   render(tasks) {
-    const renderLoadMoreButton = () => {
-      if (showingTasksCount >= taskListElement.length) {
-        return;
-      }
-
-      Object(_utils_render_js__WEBPACK_IMPORTED_MODULE_6__["render"])(container, this._loadMoreButtonComponent);
-
-      this._loadMoreButtonComponent.setClickHandler(() => {
-        const prevTasksCount = showingTasksCount;
-
-        showingTasksCount += SHOWING_TASKS_COUNT_BY_BUTTON;
-
-        tasks.slice(prevTasksCount, showingTasksCount).forEach((task) => {
-          renderTask(taskListElement, task);
-        });
-
-        if (showingTasksCount >= tasks.length) {
-          Object(_utils_render_js__WEBPACK_IMPORTED_MODULE_6__["remove"])(this._loadMoreButtonComponent);
-        }
-      });
-    };
+    this._tasks = tasks;
 
     const container = this._container.getElement();
 
-    const isAllTasksArchived = !tasks.some((task) => !task.isArchive);
+    this._tasksToShow = this._tasks.slice();
+
+    const isAllTasksArchived = !this._tasksToShow.some((task) => !task.isArchive);
 
     if (isAllTasksArchived) {
-      Object(_utils_render_js__WEBPACK_IMPORTED_MODULE_6__["render"])(container, this._noTasksComponent);
+      Object(_utils_render_js__WEBPACK_IMPORTED_MODULE_4__["render"])(container, this._noTasksComponent);
 
       return;
     }
 
-    Object(_utils_render_js__WEBPACK_IMPORTED_MODULE_6__["render"])(container, this._sortComponent);
-    Object(_utils_render_js__WEBPACK_IMPORTED_MODULE_6__["render"])(container, this._tasksComponent);
+    Object(_utils_render_js__WEBPACK_IMPORTED_MODULE_4__["render"])(this._container.getElement(), this._sortComponent);
+    Object(_utils_render_js__WEBPACK_IMPORTED_MODULE_4__["render"])(this._container.getElement(), this._tasksComponent);
+
+    const newTasks = renderTasks(this._tasksComponent.getElement(), this._tasksToShow.slice(0, this._showingTasksCount), this._dataChangeHandler, this._viewChangeHandler);
+    this._showedTaskControllers = newTasks;
+
+    this._renderLoadMoreButton();
+  }
+
+  _renderLoadMoreButton() {
+    if (this._showingTasksCount >= this._tasksToShow.length) {
+      return;
+    }
+
+    Object(_utils_render_js__WEBPACK_IMPORTED_MODULE_4__["render"])(this._container.getElement(), this._loadMoreButtonComponent);
+
+    this._loadMoreButtonComponent.setClickHandler(() => {
+      const prevTasksCount = this._showingTasksCount;
+
+      this._showingTasksCount += SHOWING_TASKS_COUNT_BY_BUTTON;
+
+      const newTasks = renderTasks(this._tasksComponent.getElement(), this._tasksToShow.slice(prevTasksCount, this._showingTasksCount), this._dataChangeHandler, this._viewChangeHandler);
+      this._showedTaskControllers = this._showedTaskControllers.concat(newTasks);
+
+      if (this._showingTasksCount >= this._tasksToShow.length) {
+        Object(_utils_render_js__WEBPACK_IMPORTED_MODULE_4__["remove"])(this._loadMoreButtonComponent);
+      }
+    });
+  }
+
+  _dataChangeHandler(oldData, newData) {
+    const index = this._tasks.findIndex((it) => oldData === it);
+
+    if (index === -1) {
+      return;
+    }
+
+    this._tasks = [...this._tasks.slice(0, index), newData, ...this._tasks.slice(index + 1)];
+
+    const shownIndex = this._tasksToShow.findIndex((it) => oldData === it);
+    this._tasksToShow = [...this._tasksToShow.slice(0, shownIndex), newData, ...this._tasksToShow.slice(shownIndex + 1)];
+
+    this._showedTaskControllers[shownIndex].render(this._tasks[index]);
+  }
+
+  _viewChangeHandler() {
+    this._showedTaskControllers.forEach((it) => it.setDefaultView());
+  }
+
+  _sortTypeChangeHandler(sortType) {
+    Object(_utils_render_js__WEBPACK_IMPORTED_MODULE_4__["remove"])(this._loadMoreButtonComponent);
+
+    this._showingTasksCount = SHOWING_TASKS_COUNT_ON_START;
+
+    this._tasksToShow = getSortedTasks(this._tasks, sortType);
 
     const taskListElement = this._tasksComponent.getElement();
 
-    let showingTasksCount = SHOWING_TASKS_COUNT_ON_START;
+    taskListElement.innerHTML = ``;
 
-    tasks.slice(0, showingTasksCount).forEach((task) => {
-      renderTask(taskListElement, task);
+    const newTasks = renderTasks(taskListElement, this._tasksToShow.slice(0, this._showingTasksCount), this._dataChangeHandler, this._viewChangeHandler);
+    this._showedTaskControllers = newTasks;
+
+    this._renderLoadMoreButton();
+  }
+}
+
+
+/***/ }),
+
+/***/ "./src/controllers/task.js":
+/*!*********************************!*\
+  !*** ./src/controllers/task.js ***!
+  \*********************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return TaskController; });
+/* harmony import */ var _components_new_task_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../components/new-task.js */ "./src/components/new-task.js");
+/* harmony import */ var _components_task_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../components/task.js */ "./src/components/task.js");
+/* harmony import */ var _utils_render_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils/render.js */ "./src/utils/render.js");
+
+
+
+
+const Mode = {
+  DEFAULT: `default`,
+  EDIT: `edit`,
+};
+
+class TaskController {
+  constructor(container, dataChangeHander, viewChangeHandler) {
+    this._container = container;
+    this._dataChangeHander = dataChangeHander;
+
+    this._viewChangeHandler = viewChangeHandler;
+    this._mode = Mode.DEFAULT;
+
+    this._taskComponent = null;
+    this._newTaskComponent = null;
+
+    this._escapeButtonHandler = this._escapeButtonHandler.bind(this);
+    this._replaceTaskToNew = this._replaceTaskToNew.bind(this);
+    this._replaceNewToTask = this._replaceNewToTask.bind(this);
+  }
+
+  render(task) {
+    const oldTaskComponent = this._taskComponent;
+    const oldNewTaskComponent = this._newTaskComponent;
+
+    this._taskComponent = new _components_task_js__WEBPACK_IMPORTED_MODULE_1__["default"](task);
+    this._taskComponent.setEditClickHandler(this._replaceTaskToNew);
+
+    this._taskComponent.setFavoriteButtonClickHandler((evt) => {
+      evt.preventDefault();
+
+      this._dataChangeHander(task, Object.assign({}, task, {
+        isFavorite: !task.isFavorite,
+      }));
     });
 
-    renderLoadMoreButton();
+    this._taskComponent.setArchiveButtonClickHandler((evt) => {
+      evt.preventDefault();
 
-    this._sortComponent.setSortTypeChangeHandler((sortType) => {
-      showingTasksCount = SHOWING_TASKS_COUNT_ON_START;
-
-      const sortedTasks = getSortedTasks(tasks, sortType);
-
-      taskListElement.innerHTML = ``;
-
-      sortedTasks.slice(0, showingTasksCount).forEach((task) => {
-        renderTask(taskListElement, task);
-      });
-
-      renderLoadMoreButton();
+      this._dataChangeHander(task, Object.assign({}, task, {
+        isArchive: !task.isArchive,
+      }));
     });
+
+    this._newTaskComponent = new _components_new_task_js__WEBPACK_IMPORTED_MODULE_0__["default"](task);
+    this._newTaskComponent.setSubmitHandler(this._replaceNewToTask);
+
+    if (oldTaskComponent && oldNewTaskComponent) {
+      Object(_utils_render_js__WEBPACK_IMPORTED_MODULE_2__["replace"])(this._taskComponent, oldTaskComponent);
+      Object(_utils_render_js__WEBPACK_IMPORTED_MODULE_2__["replace"])(this._newTaskComponent, oldNewTaskComponent);
+
+      return;
+    }
+
+    Object(_utils_render_js__WEBPACK_IMPORTED_MODULE_2__["render"])(this._container, this._taskComponent);
+  }
+
+  setDefaultView() {
+    if (this._mode !== Mode.DEFAULT) {
+      this._replaceNewToTask();
+    }
+  }
+
+  _replaceTaskToNew(evt) {
+    evt.preventDefault();
+
+    this._viewChangeHandler();
+
+    Object(_utils_render_js__WEBPACK_IMPORTED_MODULE_2__["replace"])(this._newTaskComponent, this._taskComponent);
+    document.addEventListener(`keydown`, this._escapeButtonHandler);
+
+    this._mode = Mode.EDIT;
+  }
+
+  _replaceNewToTask(evt) {
+    if (evt) {
+      evt.preventDefault();
+    }
+
+    this._newTaskComponent.reset();
+
+    Object(_utils_render_js__WEBPACK_IMPORTED_MODULE_2__["replace"])(this._taskComponent, this._newTaskComponent);
+    document.removeEventListener(`keydown`, this._escapeButtonHandler);
+
+    this._mode = Mode.DEFAULT;
+  }
+
+  _escapeButtonHandler(evt) {
+    if (evt.key === `Escape` || evt.key === `Esc`) {
+      this._replaceNewToTask();
+      document.removeEventListener(`keydown`, this._escapeButtonHandler);
+    }
   }
 }
 
