@@ -1,8 +1,12 @@
-import {formatTime} from '../utils/common.js';
-import {DAYS, MONTH_NAMES, COLORS} from '../const.js';
+import {formatTime, formatDate} from '../utils/common.js';
+import {DAYS, COLORS} from '../const.js';
 import createColorsMarkup from './color-markup.js';
 import createRepeatingDaysMarkup from './repeating-days-markup.js';
 import AbstractSmartComponent from './abstract-smart-component.js';
+
+import flatpickr from 'flatpickr';
+import 'flatpickr/dist/flatpickr.min.css';
+import 'flatpickr/dist/themes/material_green.css';
 
 const isRepeating = (repeatingDays) => {
   return Object.values(repeatingDays).some(Boolean);
@@ -15,7 +19,7 @@ const createNewTaskTemplate = (task, options = {}) => {
   const isExpired = dueDate instanceof Date && dueDate < Date.now();
   const isBlockSaveButton = (isDateShowing && isRepeatingTask) || (isRepeatingTask && !isRepeating(activeRepeatingDays));
 
-  const date = (isDateShowing && dueDate) ? `${dueDate.getDate()} ${MONTH_NAMES[dueDate.getMonth()]}` : ``;
+  const date = (isDateShowing && dueDate) ? `${formatDate(dueDate)}` : ``;
   const time = (isDateShowing && dueDate) ? `${formatTime(dueDate)}` : ``;
 
   const repeatClass = isRepeatingTask ? `card--repeat` : ``;
@@ -112,7 +116,10 @@ export default class NewTask extends AbstractSmartComponent {
     this._activeRepeatingDays = Object.assign({}, task.repeatingDays);
     this._submitHandler = null;
 
+    this._flatpickr = null;
+
     this._subscribeOnEvents();
+    this._applyFlatpickr();
   }
 
   getTemplate() {
@@ -144,17 +151,25 @@ export default class NewTask extends AbstractSmartComponent {
     this._subscribeOnEvents();
   }
 
+  rerender() {
+    super.rerender();
+
+    this._applyFlatpickr();
+  }
+
   _subscribeOnEvents() {
     const element = this.getElement();
 
     element.querySelector(`.card__date-deadline-toggle`).addEventListener(`click`, () => {
       this._isDateShowing = !this._isDateShowing;
+      this._isRepeatingTask = false;
 
       this.rerender();
     });
 
     element.querySelector(`.card__repeat-toggle`).addEventListener(`click`, () => {
       this._isRepeatingTask = !this._isRepeatingTask;
+      this._isDateShowing = false;
 
       this.rerender();
     });
@@ -166,6 +181,24 @@ export default class NewTask extends AbstractSmartComponent {
         this._activeRepeatingDays[evt.target.value] = evt.target.checked;
 
         this.rerender();
+      });
+    }
+  }
+
+  _applyFlatpickr() {
+    if (this._flatpickr) {
+      this._flatpickr.destroy();
+      this._flatpickr = null;
+    }
+
+    if (this._isDateShowing) {
+      const dateElement = this.getElement().querySelector(`.card__date`);
+
+      this._flatpickr = flatpickr(dateElement, {
+        altInput: true,
+        allowInput: true,
+        defaultDate: this._task.dueDate || `today`,
+        enableTime: true
       });
     }
   }
