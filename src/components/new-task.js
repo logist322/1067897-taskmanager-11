@@ -1,4 +1,4 @@
-import {formatTime, formatDate} from '../utils/common.js';
+import {formatTime, formatDate, isRepeating, isOverdueDate} from '../utils/common.js';
 import {DAYS, COLORS} from '../const.js';
 import createColorsMarkup from './color-markup.js';
 import createRepeatingDaysMarkup from './repeating-days-markup.js';
@@ -8,15 +8,11 @@ import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
 import 'flatpickr/dist/themes/material_green.css';
 
-const isRepeating = (repeatingDays) => {
-  return Object.values(repeatingDays).some(Boolean);
-};
-
 const createNewTaskTemplate = (task, options = {}) => {
   const {description, dueDate, color} = task;
   const {isDateShowing, isRepeatingTask, activeRepeatingDays} = options;
 
-  const isExpired = dueDate instanceof Date && dueDate < Date.now();
+  const isExpired = dueDate instanceof Date && isOverdueDate(dueDate, new Date());
   const isBlockSaveButton = (isDateShowing && isRepeatingTask) || (isRepeatingTask && !isRepeating(activeRepeatingDays));
 
   const date = (isDateShowing && dueDate) ? `${formatDate(dueDate)}` : ``;

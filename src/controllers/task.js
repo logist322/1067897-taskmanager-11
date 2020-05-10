@@ -1,6 +1,6 @@
 import NewTaskComponent from '../components/new-task.js';
 import TaskComponent from '../components/task.js';
-import {render, replace} from '../utils/render.js';
+import {render, replace, remove} from '../utils/render.js';
 
 const Mode = {
   DEFAULT: `default`,
@@ -63,6 +63,12 @@ export default class TaskController {
     if (this._mode !== Mode.DEFAULT) {
       this._replaceNewToTask();
     }
+  }
+
+  destroy() {
+    remove(this._newTaskComponent);
+    remove(this._taskComponent);
+    document.removeEventListener(`keydown`, this._escapeButtonHandler);
   }
 
   _replaceTaskToNew(evt) {
