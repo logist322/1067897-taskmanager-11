@@ -39,6 +39,8 @@ export default class Filter extends AbstractComponent {
     super();
 
     this._filters = filters;
+
+    this._changeHandler = null;
   }
 
   getTemplate() {
@@ -50,6 +52,7 @@ export default class Filter extends AbstractComponent {
       const filterName = getFilterNameById(evt.target.id);
 
       handler(filterName);
+      this._changeHandler = handler;
     });
   }
 }

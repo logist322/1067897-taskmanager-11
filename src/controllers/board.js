@@ -3,7 +3,7 @@ import TasksComponent from '../components/tasks.js';
 import LoadMoreButtonComponent from '../components/load-more-button.js';
 import NoTasksComponent from '../components/no-tasks.js';
 import {render, remove} from '../utils/render.js';
-import TaskController from './task.js';
+import TaskController, {Mode as TaskControllerMode, EmptyTask} from './task.js';
 
 const SHOWING_TASKS_COUNT_ON_START = 8;
 const SHOWING_TASKS_COUNT_BY_BUTTON = 8;
@@ -47,6 +47,7 @@ export default class BoardController {
 
     this._tasksToShow = this._tasksModel.getTasks();
     this._showedTaskControllers = [];
+    this._creatingTask = null;
     this._showingTasksCount = SHOWING_TASKS_COUNT_ON_START;
 
     this._noTasksComponent = new NoTasksComponent();
@@ -81,6 +82,17 @@ export default class BoardController {
     this._renderTasks(this._tasksToShow.slice(0, this._showingTasksCount));
 
     this._renderLoadMoreButton();
+  }
+
+  createTask() {
+    if (this._creatingTask) {
+      return;
+    }
+
+    const taskListElement = this._tasksComponent.getElement();
+    this._creatingTask = new TaskController(taskListElement, this._dataChangeHandler, this._viewChangeHandler);
+    this._showedTaskControllers = [this._creatingTask, ...this._showedTaskControllers];
+    this._creatingTask.render(EmptyTask, TaskControllerMode.ADDING);
   }
 
   _renderTasks(tasks) {
@@ -129,32 +141,44 @@ export default class BoardController {
   }
 
   _dataChangeHandler(oldData, newData) {
-    const isSuccess = this._tasksModel.updateTask(oldData.id, newData);
+    if (oldData === EmptyTask) {
+      this._creatingTask = null;
 
-    if (isSuccess) {
-      const shownIndex = this._tasksToShow.findIndex((it) => oldData === it);
+      if (newData === null) {
+        this._showedTaskControllers[0].destroy();
+        this._updateTasks();
+      } else {
 
-      if (oldData.isArchive !== newData.isArchive) {
-        this._showedTaskControllers[shownIndex].destroy();
-        this._showedTaskControllers.splice(shownIndex, 1);
+        newData.id = String(new Date() + Math.random());
+        this._tasksModel.addTask(newData);
+        this._showedTaskControllers[0].render(newData);
 
-        this._tasksToShow.splice(shownIndex, 1);
-
-
-        if (this._tasksToShow.length <= this._showingTasksCount) {
-          remove(this._loadMoreButtonComponent);
+        if (this._showingTasksCount === SHOWING_TASKS_COUNT_BY_BUTTON) {
+          this._showedTaskControllers.pop().destroy();
         }
 
-        if (this._tasksToShow.length >= this._showingTasksCount) {
-          this._renderTasks(this._tasksToShow.slice(this._showingTasksCount - 1, this._showingTasksCount));
-        }
+        this._showingTasksCount = this._showedTaskControllers.length;
 
-        return;
+        this._renderLoadMoreButton();
       }
+    } else if (newData === null) {
+      this._tasksModel.removeTask(oldData.id);
+      this._updateTasks();
+    } else {
+      const isSuccess = this._tasksModel.updateTask(oldData.id, newData);
 
-      this._tasksToShow = [...this._tasksToShow.slice(0, shownIndex), newData, ...this._tasksToShow.slice(shownIndex + 1)];
+      if (isSuccess) {
+        const shownIndex = this._tasksToShow.findIndex((it) => oldData === it);
 
-      this._showedTaskControllers[shownIndex].render(newData);
+        if (oldData.isArchive !== newData.isArchive) {
+          this._updateTasks();
+
+          return;
+        }
+
+        this._tasksToShow = [...this._tasksToShow.slice(0, shownIndex), newData, ...this._tasksToShow.slice(shownIndex + 1)];
+        this._updateTasks();
+      }
     }
   }
 

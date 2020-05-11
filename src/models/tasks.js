@@ -43,6 +43,25 @@ export default class Tasks {
     return true;
   }
 
+  removeTask(id) {
+    const index = this._tasks.findIndex((it) => id === it.id);
+
+    if (index === -1) {
+      return false;
+    }
+
+    this._tasks.splice(index, 1);
+
+    this._callHandlers(this._dataChangeHandlers);
+
+    return true;
+  }
+
+  addTask(task) {
+    this._tasks = [task, ...this._tasks];
+    this._callHandlers(this._dataChangeHandlers);
+  }
+
   setFilterChangeHandler(handler) {
     this._filterChangeHandlers.push(handler);
   }
