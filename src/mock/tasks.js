@@ -17,7 +17,7 @@ const generateTask = () => {
     id: String(new Date() + Math.random()),
     description: getRandomElementFromArray(DESCRIPTIONS),
     dueDate,
-    repeatingDays: getRepeatingDays(Math.random() > 0.5),
+    repeatingDays: dueDate ? getRepeatingDays(false) : getRepeatingDays(Math.random() > 0.5),
     color: getRandomElementFromArray(COLORS),
     isArchive: Math.random() > 0.5,
     isFavorite: Math.random() > 0.5
