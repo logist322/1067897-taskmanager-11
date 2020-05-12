@@ -1,25 +1,31 @@
 import AbstractComponent from './abstract-component.js';
 
-const createSiteFilterMarkup = (filter, isChecked) => {
-  const {name, count} = filter;
+const FILTER_ID_PREFIX = `filter__`;
+
+const getFilterNameById = (id) => {
+  return id.substring(FILTER_ID_PREFIX.length);
+};
+
+const createSiteFilterMarkup = (filter) => {
+  const {name, count, isChecked} = filter;
 
   return (
     `<input
       type="radio"
-      id="filter__${name}"
+      id="${FILTER_ID_PREFIX}${name}"
       class="filter__input visually-hidden"
       name="filter"
       ${isChecked ? `checked` : ``}
     />
-    <label for="filter__${name}" class="filter__label">
+    <label for="${FILTER_ID_PREFIX}${name}" class="filter__label">
       ${name} <span class="filter__${name}-count">${count}</span></label
     >`
   );
 };
 
 const createSiteFilterTemplate = (filters) => {
-  const filtersMarkup = filters.map((it, i) =>
-    createSiteFilterMarkup(it, i === 0)).join(`\n`);
+  const filtersMarkup = filters.map((it) =>
+    createSiteFilterMarkup(it)).join(`\n`);
 
   return (
     `<section class="main__filter filter container">
@@ -33,9 +39,20 @@ export default class Filter extends AbstractComponent {
     super();
 
     this._filters = filters;
+
+    this._changeHandler = null;
   }
 
   getTemplate() {
     return createSiteFilterTemplate(this._filters);
+  }
+
+  setFilterChangeHandler(handler) {
+    this.getElement().addEventListener(`change`, (evt) => {
+      const filterName = getFilterNameById(evt.target.id);
+
+      handler(filterName);
+      this._changeHandler = handler;
+    });
   }
 }
