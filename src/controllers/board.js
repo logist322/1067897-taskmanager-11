@@ -95,6 +95,14 @@ export default class BoardController {
     this._creatingTask.render(EmptyTask, TaskControllerMode.ADDING);
   }
 
+  show() {
+    this._container.show();
+  }
+
+  hide() {
+    this._container.hide();
+  }
+
   _renderTasks(tasks) {
     const newTasks = renderTasks(this._tasksComponent.getElement(), tasks, this._dataChangeHandler, this._viewChangeHandler);
     this._showedTaskControllers = [...this._showedTaskControllers, ...newTasks];
