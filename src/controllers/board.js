@@ -141,10 +141,13 @@ export default class BoardController {
     this._showedTaskControllers = [];
   }
 
-  _updateTasks() {
+  _updateTasks(isDefaultTaskCount = true) {
     this._removeTasks();
 
-    this._showingTasksCount = SHOWING_TASKS_COUNT_ON_START;
+    if (isDefaultTaskCount) {
+      this._showingTasksCount = SHOWING_TASKS_COUNT_ON_START;
+    }
+
     this._tasksToShow = this._tasksModel.getTasks().slice();
 
     this._renderTasks(this._tasksToShow.slice(0, this._showingTasksCount));
@@ -187,14 +190,8 @@ export default class BoardController {
           if (isSuccess) {
             const shownIndex = this._tasksToShow.findIndex((it) => oldData === it);
 
-            if (oldData.isArchive !== newData.isArchive) {
-              this._updateTasks();
-
-              return;
-            }
-
             this._tasksToShow = [...this._tasksToShow.slice(0, shownIndex), taskModel, ...this._tasksToShow.slice(shownIndex + 1)];
-            this._updateTasks();
+            this._updateTasks(false);
           }
         });
     }
