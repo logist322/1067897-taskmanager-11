@@ -22,7 +22,7 @@ export default class API {
   }
 
   getTasks() {
-    return this._load({
+    return this._sendRequest({
       url: `tasks`
     })
       .then((res) => res.json())
@@ -30,10 +30,10 @@ export default class API {
   }
 
   createTask(task) {
-    return this._load({
+    return this._sendRequest({
       url: `tasks`,
       method: Method.POST,
-      body: JSON.stringify(task.toRAW()),
+      body: task,
       headers: new Headers({"Content-Type": `application/json`})
     })
       .then((response) => response.json())
@@ -41,21 +41,21 @@ export default class API {
   }
 
   deleteTask(id) {
-    return this._load({url: `tasks/${id}`, method: Method.DELETE});
+    return this._sendRequest({url: `tasks/${id}`, method: Method.DELETE});
   }
 
-  updateTask(id, data) {
-    return this._load({
+  updateTask(id, task) {
+    return this._sendRequest({
       url: `tasks/${id}`,
       method: Method.PUT,
-      body: JSON.stringify(data.toRAW()),
+      body: task,
       headers: new Headers({"Content-Type": `application/json`})
     })
       .then((res) => res.json())
       .then(Task.parseTask);
   }
 
-  _load({url, method = Method.GET, body = null, headers = new Headers()}) {
+  _sendRequest({url, method = Method.GET, body = null, headers = new Headers()}) {
     headers.append(`Authorization`, this._authorization);
 
     return fetch(`${this._endPoint}/${url}`, {method, body, headers})
