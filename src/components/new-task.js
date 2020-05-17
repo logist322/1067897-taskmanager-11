@@ -154,7 +154,12 @@ export default class NewTask extends AbstractSmartComponent {
   }
 
   setSubmitHandler(handler) {
-    this.getElement().querySelector(`form`).addEventListener(`submit`, handler);
+    this.getElement().querySelector(`form`).addEventListener(`submit`, (evt) => {
+      evt.preventDefault();
+
+      handler();
+      this.getElement().querySelector(`.card__save`).textContent = `Saving...`;
+    });
 
     this._submitHandler = handler;
   }
@@ -188,9 +193,47 @@ export default class NewTask extends AbstractSmartComponent {
     return new FormData(form);
   }
 
+  blockForm() {
+    this.getElement().querySelector(`.card__text`).disabled = true;
+    this.getElement().querySelector(`.card__date-deadline-toggle`).disabled = true;
+    this.getElement().querySelector(`.card__date-deadline`).disabled = true;
+    this.getElement().querySelector(`.card__repeat-toggle`).disabled = true;
+    this.getElement().querySelectorAll(`.card__repeat-days`).disabled = true;
+    this.getElement().querySelectorAll(`.card__color-input`).forEach((element) => {
+      element.disabled = true;
+    });
+    this.getElement().querySelector(`.card__save`).disabled = true;
+    this.getElement().querySelector(`.card__delete`).disabled = true;
+  }
+
+  unblockForm() {
+    this.getElement().querySelector(`.card__text`).disabled = false;
+    this.getElement().querySelector(`.card__date-deadline-toggle`).disabled = false;
+    this.getElement().querySelector(`.card__date-deadline`).disabled = false;
+    this.getElement().querySelector(`.card__repeat-toggle`).disabled = false;
+    this.getElement().querySelectorAll(`.card__repeat-day-input`).forEach((element) => {
+      element.disabled = false;
+    });
+    this.getElement().querySelectorAll(`.card__color-input`).forEach((element) => {
+      element.disabled = false;
+    });
+    this.getElement().querySelector(`.card__save`).disabled = false;
+    this.getElement().querySelector(`.card__delete`).disabled = false;
+  }
+
+  refreshButtonsText() {
+    this.getElement().querySelector(`.card__save`).textContent = `Save`;
+    this.getElement().querySelector(`.card__delete`).textContent = `Delete`;
+  }
+
   setDeleteButtonClickHandler(handler) {
     this.getElement().querySelector(`.card__delete`)
-      .addEventListener(`click`, handler);
+      .addEventListener(`click`, (evt) => {
+        evt.preventDefault();
+
+        handler();
+        this.getElement().querySelector(`.card__delete`).textContent = `Deleting...`;
+      });
 
     this._deleteButtonClickHandler = handler;
   }

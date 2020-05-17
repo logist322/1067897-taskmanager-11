@@ -31,11 +31,13 @@ const menuComponent = new MenuComponent();
 render(siteHeaderElement, menuComponent);
 filterController.render();
 render(siteMainElement, boardComponent);
+boardComponent.getElement().innerHTML = `<p class="board__no-tasks">Loading...</p>`;
 render(siteMainElement, statisticsComponent);
 statisticsComponent.hide();
 
 api.getTasks()
   .then((tasks) => {
+    boardComponent.getElement().innerHTML = ``;
     tasksModel.setTasks(tasks);
     boardController.render();
   });

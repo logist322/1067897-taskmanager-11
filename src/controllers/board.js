@@ -155,6 +155,8 @@ export default class BoardController {
   }
 
   _dataChangeHandler(oldData, newData) {
+    const index = this._tasksToShow.findIndex((task) => task === oldData);
+
     if (oldData === EmptyTask) {
       this._creatingTask = null;
 
@@ -162,6 +164,8 @@ export default class BoardController {
         this._showedTaskControllers[0].destroy();
         this._updateTasks();
       } else {
+        this._showedTaskControllers[index].waitRequest();
+
         this._api.createTask(newData.toRAW())
           .then((taskModel) => {
             this._tasksModel.addTask(taskModel);
@@ -174,15 +178,25 @@ export default class BoardController {
             this._showingTasksCount = this._showedTaskControllers.length;
 
             this._renderLoadMoreButton();
+          })
+          .catch(() => {
+            this._showedTaskControllers[0].onError();
           });
       }
     } else if (newData === null) {
+      this._showedTaskControllers[index].waitRequest();
+
       this._api.deleteTask(oldData.id)
         .then(() => {
           this._tasksModel.removeTask(oldData.id);
           this._updateTasks();
+        })
+        .catch(() => {
+          this._showedTaskControllers[index].onError();
         });
     } else {
+      this._showedTaskControllers[index].waitRequest();
+
       this._api.updateTask(oldData.id, newData.toRAW())
         .then((taskModel) => {
           const isSuccess = this._tasksModel.updateTask(oldData.id, taskModel);
@@ -193,6 +207,9 @@ export default class BoardController {
             this._tasksToShow = [...this._tasksToShow.slice(0, shownIndex), taskModel, ...this._tasksToShow.slice(shownIndex + 1)];
             this._updateTasks(false);
           }
+        })
+        .catch(() => {
+          this._showedTaskControllers[index].onError();
         });
     }
   }

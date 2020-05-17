@@ -4,6 +4,8 @@ import {render, replace, remove} from '../utils/render.js';
 import {Color, DAYS} from '../const.js';
 import TaskModel from '../models/task.js';
 
+const SHAKE_ANIMATION_TIMEOUT = 600;
+
 export const Mode = {
   ADDING: `adding`,
   DEFAULT: `default`,
@@ -72,18 +74,14 @@ export default class TaskController {
     this._taskComponent = new TaskComponent(task);
     this._taskComponent.setEditClickHandler(this._replaceTaskToNew);
 
-    this._taskComponent.setFavoriteButtonClickHandler((evt) => {
-      evt.preventDefault();
-
+    this._taskComponent.setFavoriteButtonClickHandler(() => {
       const newTask = TaskModel.clone(task);
       newTask.isFavorite = !newTask.isFavorite;
 
       this._dataChangeHander(task, newTask);
     });
 
-    this._taskComponent.setArchiveButtonClickHandler((evt) => {
-      evt.preventDefault();
-
+    this._taskComponent.setArchiveButtonClickHandler(() => {
       const newTask = TaskModel.clone(task);
       newTask.isArchive = !newTask.isArchive;
 
@@ -91,9 +89,7 @@ export default class TaskController {
     });
 
     this._newTaskComponent = new NewTaskComponent(task);
-    this._newTaskComponent.setSubmitHandler((evt) => {
-      evt.preventDefault();
-
+    this._newTaskComponent.setSubmitHandler(() => {
       const formData = this._newTaskComponent.getData();
       const data = parseFormData(formData);
 
@@ -133,6 +129,28 @@ export default class TaskController {
     remove(this._newTaskComponent);
     remove(this._taskComponent);
     document.removeEventListener(`keydown`, this._escapeButtonHandler);
+  }
+
+  waitRequest() {
+    this._taskComponent.blockButtons();
+    this._newTaskComponent.blockForm();
+  }
+
+  onError() {
+    this._taskComponent.unblockButtons();
+    this._taskComponent.refreshButtonsText();
+    this._newTaskComponent.unblockForm();
+    this._newTaskComponent.refreshButtonsText();
+
+    this._newTaskComponent.getElement().style = `z-index: 100`;
+    this._newTaskComponent.getElement().style.animation = `shake ${SHAKE_ANIMATION_TIMEOUT / 1000}s`;
+    this._taskComponent.getElement().style.animation = `shake ${SHAKE_ANIMATION_TIMEOUT / 1000}s`;
+
+    setTimeout(() => {
+      this._newTaskComponent.getElement().style = `z-index: 1`;
+      this._newTaskComponent.getElement().style.animation = ``;
+      this._taskComponent.getElement().style.animation = ``;
+    }, SHAKE_ANIMATION_TIMEOUT);
   }
 
   _replaceTaskToNew(evt) {
