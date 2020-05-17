@@ -162,7 +162,7 @@ export default class BoardController {
         this._showedTaskControllers[0].destroy();
         this._updateTasks();
       } else {
-        this._api.createTask(JSON.stringify(newData.toRAW()))
+        this._api.createTask(newData.toRAW())
           .then((taskModel) => {
             this._tasksModel.addTask(taskModel);
             this._showedTaskControllers[0].render(taskModel);
@@ -183,7 +183,7 @@ export default class BoardController {
           this._updateTasks();
         });
     } else {
-      this._api.updateTask(oldData.id, JSON.stringify(newData.toRAW()))
+      this._api.updateTask(oldData.id, newData.toRAW())
         .then((taskModel) => {
           const isSuccess = this._tasksModel.updateTask(oldData.id, taskModel);
 

@@ -33,7 +33,7 @@ export default class API {
     return this._sendRequest({
       url: `tasks`,
       method: Method.POST,
-      body: task,
+      body: JSON.stringify(task),
       headers: new Headers({"Content-Type": `application/json`})
     })
       .then((response) => response.json())
@@ -48,7 +48,7 @@ export default class API {
     return this._sendRequest({
       url: `tasks/${id}`,
       method: Method.PUT,
-      body: task,
+      body: JSON.stringify(task),
       headers: new Headers({"Content-Type": `application/json`})
     })
       .then((res) => res.json())
