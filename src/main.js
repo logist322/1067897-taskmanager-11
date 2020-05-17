@@ -4,39 +4,41 @@ import BoardController from './controllers/board.js';
 import BoardComponent from './components/board.js';
 import StatisticsComponent from "./components/statistics.js";
 import TasksModel from './models/tasks.js';
-import {generateTasks} from './mock/tasks.js';
 import {render} from './utils/render.js';
+import API from './api.js';
 
-const TASK_COUNT = 22;
-
-const siteMainElement = document.querySelector(`.main`);
-const siteHeaderElement = siteMainElement.querySelector(`.main__control`);
-
-const tasks = generateTasks(TASK_COUNT);
-const tasksModel = new TasksModel();
-tasksModel.setTasks(tasks);
-
-const menuComponent = new MenuComponent();
-
-render(siteHeaderElement, menuComponent);
-
-const filterController = new FilterController(siteMainElement, tasksModel);
-filterController.render();
-
-const boardComponent = new BoardComponent();
-render(siteMainElement, boardComponent);
-
-const boardController = new BoardController(boardComponent, tasksModel);
-boardController.render();
+const AUTHORIZATION = `Basic asdhGSJAdhglSADG`;
+const END_POINT = `https://11.ecmascript.pages.academy/task-manager`;
 
 const dateTo = new Date();
 const dateFrom = (() => {
   return new Date(dateTo).setDate(dateTo.getDate() - 7);
 })();
 
+const siteMainElement = document.querySelector(`.main`);
+const siteHeaderElement = siteMainElement.querySelector(`.main__control`);
+
+const api = new API(AUTHORIZATION, END_POINT);
+
+const tasksModel = new TasksModel();
+
+const filterController = new FilterController(siteMainElement, tasksModel);
+const boardComponent = new BoardComponent();
+const boardController = new BoardController(boardComponent, tasksModel, api);
 const statisticsComponent = new StatisticsComponent({tasks: tasksModel, dateFrom, dateTo});
+const menuComponent = new MenuComponent();
+
+render(siteHeaderElement, menuComponent);
+filterController.render();
+render(siteMainElement, boardComponent);
 render(siteMainElement, statisticsComponent);
 statisticsComponent.hide();
+
+api.getTasks()
+  .then((tasks) => {
+    tasksModel.setTasks(tasks);
+    boardController.render();
+  });
 
 menuComponent.setOnChange((menuItem) => {
   switch (menuItem) {

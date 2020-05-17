@@ -117,25 +117,6 @@ const createNewTaskTemplate = (task, options = {}) => {
   );
 };
 
-const parseFormData = (formData, task) => {
-  const repeatingDays = DAYS.reduce((acc, day) => {
-    acc[day] = false;
-    return acc;
-  }, {});
-
-  const date = formData.get(`date`);
-
-  return Object.assign({}, task, {
-    description: formData.get(`text`),
-    color: formData.get(`color`),
-    dueDate: date ? new Date(date) : null,
-    repeatingDays: formData.getAll(`repeat`).reduce((acc, day) => {
-      acc[day] = true;
-      return acc;
-    }, repeatingDays),
-  });
-};
-
 export default class NewTask extends AbstractSmartComponent {
   constructor(task) {
     super();
@@ -203,9 +184,8 @@ export default class NewTask extends AbstractSmartComponent {
 
   getData() {
     const form = this.getElement().querySelector(`.card__form`);
-    const formData = new FormData(form);
 
-    return parseFormData(formData, this._task);
+    return new FormData(form);
   }
 
   setDeleteButtonClickHandler(handler) {
