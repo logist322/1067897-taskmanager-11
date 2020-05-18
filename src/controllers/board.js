@@ -164,20 +164,12 @@ export default class BoardController {
         this._showedTaskControllers[0].destroy();
         this._updateTasks();
       } else {
-        this._showedTaskControllers[index].waitRequest();
+        this._showedTaskControllers[0].waitRequest();
 
         this._api.createTask(newData.toRAW())
           .then((taskModel) => {
             this._tasksModel.addTask(taskModel);
-            this._showedTaskControllers[0].render(taskModel);
-
-            if (this._showingTasksCount === SHOWING_TASKS_COUNT_BY_BUTTON) {
-              this._showedTaskControllers.pop().destroy();
-            }
-
-            this._showingTasksCount = this._showedTaskControllers.length;
-
-            this._renderLoadMoreButton();
+            this._updateTasks();
           })
           .catch(() => {
             this._showedTaskControllers[0].onError();
