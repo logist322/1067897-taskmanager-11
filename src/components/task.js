@@ -82,10 +82,37 @@ export default class Task extends AbstractComponent {
   }
 
   setFavoriteButtonClickHandler(handler) {
-    this.getElement().querySelector(`.card__btn--favorites`).addEventListener(`click`, handler);
+    this.getElement().querySelector(`.card__btn--favorites`).addEventListener(`click`, (evt) => {
+      evt.preventDefault();
+
+      evt.target.textContent = `Favoriting...`;
+      handler(evt);
+    });
   }
 
   setArchiveButtonClickHandler(handler) {
-    this.getElement().querySelector(`.card__btn--archive`).addEventListener(`click`, handler);
+    this.getElement().querySelector(`.card__btn--archive`).addEventListener(`click`, (evt) => {
+      evt.preventDefault();
+
+      evt.target.textContent = `Archiving...`;
+      handler(evt);
+    });
+  }
+
+  blockButtons() {
+    this.getElement().querySelectorAll(`.card__btn--archive, .card__btn--favorites`).forEach((element) => {
+      element.disabled = true;
+    });
+  }
+
+  unblockButtons() {
+    this.getElement().querySelectorAll(`.card__btn--archive, .card__btn--favorites`).forEach((element) => {
+      element.disabled = false;
+    });
+  }
+
+  refreshButtonsText() {
+    this.getElement().querySelector(`.card__btn--archive`).textContent = `Archive`;
+    this.getElement().querySelector(`.card__btn--favorites`).textContent = `Favorites`;
   }
 }

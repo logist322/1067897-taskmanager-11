@@ -154,7 +154,12 @@ export default class NewTask extends AbstractSmartComponent {
   }
 
   setSubmitHandler(handler) {
-    this.getElement().querySelector(`form`).addEventListener(`submit`, handler);
+    this.getElement().querySelector(`form`).addEventListener(`submit`, (evt) => {
+      evt.preventDefault();
+
+      this.getElement().querySelector(`.card__save`).textContent = `Saving...`;
+      handler();
+    });
 
     this._submitHandler = handler;
   }
@@ -188,9 +193,31 @@ export default class NewTask extends AbstractSmartComponent {
     return new FormData(form);
   }
 
+  blockForm() {
+    this.getElement().querySelectorAll(`.card__text, .card__date-deadline-toggle, .card__date-deadline, .card__repeat-toggle, .card__repeat-days, .card__color-input, .card__save, .card__delete`).forEach((element) => {
+      element.disabled = true;
+    });
+  }
+
+  unblockForm() {
+    this.getElement().querySelectorAll(`.card__text, .card__date-deadline-toggle, .card__date-deadline, .card__repeat-toggle, .card__repeat-days, .card__color-input, .card__save, .card__delete`).forEach((element) => {
+      element.disabled = false;
+    });
+  }
+
+  refreshButtonsText() {
+    this.getElement().querySelector(`.card__save`).textContent = `Save`;
+    this.getElement().querySelector(`.card__delete`).textContent = `Delete`;
+  }
+
   setDeleteButtonClickHandler(handler) {
     this.getElement().querySelector(`.card__delete`)
-      .addEventListener(`click`, handler);
+      .addEventListener(`click`, (evt) => {
+        evt.preventDefault();
+
+        this.getElement().querySelector(`.card__delete`).textContent = `Deleting...`;
+        handler();
+      });
 
     this._deleteButtonClickHandler = handler;
   }
