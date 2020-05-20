@@ -1,5 +1,3 @@
-import Task from './models/task.js';
-
 const Method = {
   GET: `GET`,
   POST: `POST`,
@@ -25,8 +23,7 @@ export default class API {
     return this._sendRequest({
       url: `tasks`
     })
-      .then((res) => res.json())
-      .then(Task.parseTasks);
+      .then((res) => res.json());
   }
 
   createTask(task) {
@@ -36,8 +33,7 @@ export default class API {
       body: JSON.stringify(task),
       headers: new Headers({"Content-Type": `application/json`})
     })
-      .then((response) => response.json())
-      .then(Task.parseTask);
+      .then((response) => response.json());
   }
 
   deleteTask(id) {
@@ -51,8 +47,17 @@ export default class API {
       body: JSON.stringify(task),
       headers: new Headers({"Content-Type": `application/json`})
     })
-      .then((res) => res.json())
-      .then(Task.parseTask);
+      .then((res) => res.json());
+  }
+
+  sync(data) {
+    return this._sendRequest({
+      url: `tasks/sync`,
+      method: Method.POST,
+      body: JSON.stringify(data),
+      headers: new Headers({"Content-Type": `application/json`})
+    })
+      .then((response) => response.json());
   }
 
   _sendRequest({url, method = Method.GET, body = null, headers = new Headers()}) {
